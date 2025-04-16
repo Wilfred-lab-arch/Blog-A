@@ -1,26 +1,19 @@
-# Node modules
-node_modules/
+node modules
 
-# Logs
 logs
-*.log
+
+.log
 npm-debug.log*
 
-# Environment variables
 .env
 
-# OS/system files
 .DS_Store
 Thumbs.db
 
-# Build outputs
 dist/
 build/
 .cache/
 
-# IDE/editor settings
 .vscode/
 .idea/
-*.sublime-workspace
-
-//
+.sublime-workspace
