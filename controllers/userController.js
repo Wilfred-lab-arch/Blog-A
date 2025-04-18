@@ -42,7 +42,6 @@ exports.register = async (req, res) => {
             success: true,
             message: 'User registered successfully!',
             data: userData,
-            token
         });
 
     } catch (err) {
