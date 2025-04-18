@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const slugify = require('slugify');
 const postSchema = new mongoose.Schema(
   {
     title: {
@@ -54,6 +54,14 @@ postSchema.pre('save', function (next) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
+  next();
+});
+
+
+postSchema.pre('save', function (next) {
+  if (!this.slug && this.title) {
+    this.slug = slugify(this.title, { lower: true, strict: true });
+  }
   next();
 });
 

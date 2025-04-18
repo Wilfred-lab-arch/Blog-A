@@ -1,30 +1,29 @@
-const express = require('express');
-const dotenv = require('dotenv');
 require('dotenv').config()
+// Debugging the JWT_SECRET_KEY from .env
+console.log("JWT_SECRET_KEY:", process.env.JWT_SECRET_KEY);
+console.log("typeof JWT_SECRET_KEY:", typeof process.env.JWT_SECRET_KEY);
+const express = require('express');
+const jwt = require('jsonwebtoken')
 const cors = require('cors');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
-
-
-// Load environment variables
-dotenv.config();
-
+const { authMiddleware } = require('./middlewares/authMiddleware')
 
 
 // Connect to DB
 connectDB();
-
 
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use('/api/', userRoutes);
+app.use('/api/', authMiddleware, userRoutes);
 app.use('/api/', postRoutes);
 app.use('/api/', commentRoutes);
+
 
 // Routes placeholder
 app.get('/', (req, res) => {

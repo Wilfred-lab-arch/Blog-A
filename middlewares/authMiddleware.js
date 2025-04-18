@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const userModel = require("../models/userModel");
 require("dotenv").config();
 
 exports.authMiddleware = async (req, res, next) => {
@@ -13,7 +12,10 @@ exports.authMiddleware = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(
+      token, 
+      process.env.JWT_SECRET_KEY,
+  );
 
     // Attach user data to request object
     req.user = decoded; 
