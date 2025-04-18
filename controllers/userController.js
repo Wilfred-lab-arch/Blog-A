@@ -1,49 +1,101 @@
+require('dotenv').config();
 const User = require('../models/userModel');
+const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
-const generateToken = require('../utils/generateToken.js');
-const sendResponse = require('../utils/sendResponse');
 
 
-// Register
-exports.registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
-  try {
-    const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: 'User already exists' });
+exports.register = async (req, res) => {
+    try {
+        const { firstName, lastName, phoneNumber, email, password } = req.body;
 
-    const user = await User.create({ username, email, password });
-    const token = generateToken(user);
-    res.status(201).json({ user: { id: user._id, username, email, role: user.role }, token });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-  sendResponse(res, 201, true, newUser, 'User created');
+        if (!firstName || !lastName || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill in all fields!"
+            });
+        }
+
+        let existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'User already exists!'
+            });
+        }
+
+        const saltRounds = 10;
+        const hash = await bcrypt.hash(password, saltRounds);
+
+        const newUser = new User({
+            firstName,
+            lastName,
+            phoneNumber,
+            email,
+            password: hash
+        });
+
+        await newUser.save();
+
+        const { password: _, ...userData } = newUser._doc;
+
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully!',
+            data: userData,
+            token
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: err.message
+        });
+    }
 };
 
-// Login
-exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user || !(await user.matchPassword(password)))
-      return res.status(400).json({ message: 'login successful' });
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    const token = generateToken(user);
-    res.json({ user: { id: user._id, username: user.username, email: user.email, role: user.role }, token });
-    
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-  
-};
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
 
-// Get Profile
-exports.getProfile = async (req, res) => {
-  try {
-  const user = await User.findById(req.user.id).select('-password');
-  res.json(user);
-  sendResponse(res, 201, true, newUser, 'Profile success');
-}  catch (err) {
-res.status(500).json({ message: err.message });
-}
+        const isEqual = await bcrypt.compare(password, user.password);
+        if (!isEqual) {
+            return res.status(400).json({
+                success: false,
+                message: 'Incorrect password'
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: '7d' }
+        );
+
+        const { password: _, ...userData } = user._doc;
+
+        res.status(200).json({
+            success: true,
+            message: 'Welcome!',
+            userData,
+            token
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: err.message
+        });
+    }
 };

@@ -1,11 +1,12 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+require('dotenv').config()
 const cors = require('cors');
 const connectDB = require('./config/db');
-const userRoute = require('./routes/userRoute');
-const postRoute = require('./routes/postRoute');
-const commentRoute = require('./routes/commentRoute');
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+
 
 // Load environment variables
 dotenv.config();
@@ -21,9 +22,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
-app.use('/api/users', userRoute);
-app.use('/api/posts', postRoute);
-app.use('/api/comments', commentRoute);
+app.use('/api/', userRoutes);
+app.use('/api/', postRoutes);
+app.use('/api/', commentRoutes);
 
 // Routes placeholder
 app.get('/', (req, res) => {
@@ -35,5 +36,5 @@ app.get('/', (req, res) => {
 
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server is listening on PORT:${PORT}`));
 

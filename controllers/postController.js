@@ -1,6 +1,5 @@
 const Post = require('../models/postModel');
-
-const slugify = require('../utils/slugify');
+const slugify = require('slugify');
 const { body, validationResult } = require('express-validator');
 
 
@@ -8,19 +7,25 @@ const { body, validationResult } = require('express-validator');
 // Create Post
 exports.createPost = async (req, res) => {
   try {
+
     const { title, content, tags, category} = req.body;
+    const slug = slugify(title, { lower: true, strict: true });
+    console.log("Request body:", req.body);
     const post = new Post({
       title,
+      slug,
       content,
       tags,
       category,
       author: req.user._id,
     });
-    
-    const slug = slugify(req.body.title);
 
     await post.save();
-    res.status(201).json(post);
+    res.status(201).json({
+        success: true,
+        message: 'Post created successfully!',
+        data: post
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
 
@@ -47,7 +52,13 @@ exports.validatePost = [
 // Get All Posts
 exports.getPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate('author', 'username email');
+    const { username, email } = req.body;
+    console.log("Request body:", req.body);
+    const post = new posts({
+      username,
+      email
+    });
+    const posts = await Post.find().populate('author', 'username', 'email');
     res.json(posts);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -57,6 +68,7 @@ exports.getPosts = async (req, res) => {
 // Get Single Post
 exports.getPost = async (req, res) => {
   try {
+    console.log("Request body:", req.body);
     const post = await Post.findOne({ slug: req.params.slug }).populate('author', 'username');
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
